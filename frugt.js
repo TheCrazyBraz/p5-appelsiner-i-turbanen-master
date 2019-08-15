@@ -20,6 +20,7 @@ function Appelsin() {
     this.yspeed = yspeed;
     var rad = 20;
     var newspeed = yspeed;
+    
     this.appelsin = function () {
         //Her skal vi sørge for at appelsinen bliver vist, hvis den skal vises
         if (tid > 0) {

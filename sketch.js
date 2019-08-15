@@ -22,7 +22,10 @@ function setup() {
     x = rad;
     turban = new Kurv(670, 100, 70, 50, 10);
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-    appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+
+    setInterval(function() {
+        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+    }, 60000)
 }
 
 function draw() {
