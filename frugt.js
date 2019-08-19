@@ -7,12 +7,12 @@ var rad = 20;
 var turban;
 
 var score = 0;
-var missed = 0;
+var missed = 10;
 
 
 
 function Appelsin() {
-    var tid = 20;
+    var tid = 0;
     var x = 0;
     var y = random(250, 550);
     var xspeed = 4;
@@ -43,10 +43,10 @@ function Appelsin() {
             yspeed += grav;
         }
         if (x > width || y > height) {
-            missed += 1
+            missed -= 1
             this.shootNew();
         }
-        
+
         
     }
 
@@ -69,7 +69,7 @@ function Appelsin() {
             
         }
         if (x > width || y > height) {
-            missed += 1
+            missed -= 1
             appelsin.shootNew(); 
         }
     }

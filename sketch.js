@@ -7,9 +7,9 @@ Først laver vi et nogle variable til at lave en appelsin
 //Grav står for Gravity, som bestemmer hvor hurtigt "Appelsinen" til at falde langsommere eller hurtigere 
 
 var turban;
-var tid = 50;
+var tid = 20;
 var score = 0;
-var missed = 0;
+var missed = 10;
 var appelsiner = []
 
 //Tid står for tid (Of course) hvilke er en mekanisme der bestemmer respawntiden
@@ -23,40 +23,40 @@ function setup() {
     turban = new Kurv(670, 100, 70, 50, 10);
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
 
-    setInterval(function() {
+    setInterval(function () {
         appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
     }, 60000)
 }
 
 function draw() {
     background(0);
-    for(var i=0;i<appelsiner.length;i++){
-        var appelsin=appelsiner[i]
+    for (var i = 0; i < appelsiner.length; i++) {
+        var appelsin = appelsiner[i]
         appelsin.checkScore(turban);
         appelsin.move();
         appelsin.appelsin();
     }
-    
+
     display();
-    
+
     turban.move();
 }
+
 function display() {
     fill(255)
-    text("Score: "+score, width-80, 30);
-    text("Missed: "+missed, width-80, 50);
+    text("Score: " + score, width - 80, 30);
+    text("Liv: " + missed, width - 80, 50);
 
     turban.tegn();
-   
-}
 
+}
 
 
 function keyPressed() {
-    
+
 }
 
-function mousePressed(){
+function mousePressed() {
 
 }
 
