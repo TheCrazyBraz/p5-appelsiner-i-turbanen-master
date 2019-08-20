@@ -30,7 +30,7 @@ function setup() {
     createElement("h1").id("GameOverText").position(100, 200).parent("container");
     createElement().position(100, 300).id("Restart").mousePressed(RestartGame).parent("container");
     x = rad;
-    turban = new Kurv(670, 100, 70, 50, 10);
+    turban = new Kurv(700, 100, 70, 50, 10);
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
 
     timerID = setInterval(function () {
@@ -39,7 +39,9 @@ function setup() {
         }  
     }, 6000);
 
-    createElement("div").id("status");
+    createElement("div").id("status").hide();
+    createElement("p", "Game is Running").position(325, 635).id("StatusText");
+    document.getElementById("status").innerHTML = "Green"
 }
 
 function draw() {
@@ -63,6 +65,13 @@ function draw() {
         appelsin.move();
         appelsin.appelsin();
     }
+
+    if(document.getElementById("status").innerHTML == "Green"){
+        fill(0,255,0);
+    } else if(document.getElementById("status").innerHTML == "Red"){
+        fill(255,0,0);
+    }
+    rect(0, height-50, width, 50);
 }
 
 function display() {
@@ -79,6 +88,8 @@ function Death(){
         clearInterval(timerID);
         appelsiner.length = 0;
         dead = true;
+        document.getElementById("status").innerHTML = "Red";
+        document.getElementById("StatusText").innerHTML = "Game is Paused"
     }
 }
 
@@ -101,6 +112,9 @@ function RestartGame(){
     }, 6000); 
 
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+
+    document.getElementById("status").innerHTML = "Green"
+    document.getElementById("StatusText").innerHTML = "Game is Running";
 }
 
 function keyPressed() {
