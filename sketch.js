@@ -127,13 +127,22 @@ function RestartGame(){
     //Setting the status to green to show the game is running again.
     document.getElementById("status").innerHTML = "Green"
     document.getElementById("StatusText").innerHTML = "Game is Running";
+
+    document.getElementById("highscore").innerHTML = "";
+    document.getElementById("besthighscore").innerHTML = "";
+
+    //Reseting the players score.
+    score = 0;
 }
 
+//A function for checking and displaying scores.
 function HighScoreCounter(){
+    //If the current highscore is greater then the current best score, then it will be replaced.
     if(highScore > bestHighScore){
         bestHighScore = highScore;
     }
 
+    //Displaying the to scores.
     document.getElementById("highscore").innerHTML = "Highscore: " + highScore;
     document.getElementById("besthighscore").innerHTML = "Best Highscore: " + bestHighScore;
 }
