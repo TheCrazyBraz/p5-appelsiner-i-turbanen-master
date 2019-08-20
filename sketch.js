@@ -17,6 +17,9 @@ var dead = false;
 
 var timerID = 0;
 
+var highScore = 0;
+var bestHighScore = 0
+
 function setup() {
     //Creating new elements to use for displaying information and for the game itself.
     createElement("h1","Appelsiner i turban").parent("Overskrift");
@@ -27,6 +30,8 @@ function setup() {
     createElement("div").id("status").hide();
     createElement("p", "Game is Running").position(325, 635).id("StatusText");
     document.getElementById("status").innerHTML = "Green";
+    createElement("h1").id("highscore").position(100, 350);
+    createElement("h1").id("besthighscore").position(100, 400);
 
     x = rad;
     turban = new Kurv(700, 100, 70, 50, 10);
@@ -79,6 +84,8 @@ function display() {
 //Setting up a function that is called when the player has lost all their lifes.
 function Death(){
     if(!dead && missed <= 0){
+        highScore = score;
+
         //Stops the constant adding of fruits.
         clearInterval(timerID);
         //Removes the current fruits.
@@ -93,6 +100,8 @@ function Death(){
         document.getElementById("GameOverText").innerHTML = "Game Over";
         //Displaying a button so that the player may restart the game.
         document.getElementById("Restart").innerHTML = "Click to Restart";
+
+        HighScoreCounter();
     }
 }
 
@@ -118,6 +127,15 @@ function RestartGame(){
     //Setting the status to green to show the game is running again.
     document.getElementById("status").innerHTML = "Green"
     document.getElementById("StatusText").innerHTML = "Game is Running";
+}
+
+function HighScoreCounter(){
+    if(highScore > bestHighScore){
+        bestHighScore = highScore;
+    }
+
+    document.getElementById("highscore").innerHTML = "Highscore: " + highScore;
+    document.getElementById("besthighscore").innerHTML = "Best Highscore: " + bestHighScore;
 }
 
 function keyPressed() {
