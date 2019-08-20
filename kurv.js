@@ -17,7 +17,6 @@ function Kurv(x, y, w, h, speed) {
     this.speed = speed;
     this.col = [250,230,150];
 
-
     img = loadImage('turban.png');
     this.tegn = function() {
         fill(this.col);
@@ -29,9 +28,8 @@ function Kurv(x, y, w, h, speed) {
         this.x = mouseX;
         this.y = mouseY;
     }
-
-//Disse funktioner hjælper kurven med at bevæge sig
-
+    //Disse funktioner hjælper kurven med at bevæge sig
+    
     this.grebet = function(xa, ya, ra) {
         if ((ya < this.y+30 && ya > this.y-3) && xa > this.x+ra && xa < this.x+this.w-ra) {
             return true;
@@ -40,6 +38,5 @@ function Kurv(x, y, w, h, speed) {
             return false;
         }
     }
-
     //Denne funktion hjælper kurven med at fange appelsinen
 } 

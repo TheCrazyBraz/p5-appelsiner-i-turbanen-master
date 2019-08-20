@@ -7,7 +7,7 @@ var rad = 20;
 var turban;
 
 var score = 0;
-var missed = sketch.life;
+var missed = 3;
 
 
 
