@@ -9,8 +9,13 @@ Først laver vi et nogle variable til at lave en appelsin
 var turban;
 var tid = 20;
 var score = 0;
-var missed = 10;
+var life = 3
+var missed = life;
 var appelsiner = []
+
+var dead = false;
+
+var timerID = 0;
 
 //Tid står for tid (Of course) hvilke er en mekanisme der bestemmer respawntiden
 
@@ -18,28 +23,46 @@ var appelsiner = []
  * 
  */
 function setup() {
-    createCanvas(750, 600);
+    createElement("h1","Appelsiner i turban").parent("Overskrift");
+
+    createCanvas(750, 600).id('Game');
+    createElement("div").id("container");
+    createElement("h1").id("GameOverText").position(100, 200).parent("container");
+    createElement().position(100, 300).id("Restart").mousePressed(RestartGame).parent("container");
     x = rad;
     turban = new Kurv(670, 100, 70, 50, 10);
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
 
-    setInterval(function () {
+    timerID = setInterval(function () {
+        if(!dead){
         appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-    }, 60000)
+        }  
+    }, 6000);
+
+    createElement("div").id("status");
 }
 
 function draw() {
-    background(0);
+    if(!dead){
+        background(0);
+    
+        display();
+
+        turban.move();
+
+        Death();
+    }
+    else{
+        background(200);
+        GameOverScreen();
+    }
+
     for (var i = 0; i < appelsiner.length; i++) {
         var appelsin = appelsiner[i]
         appelsin.checkScore(turban);
         appelsin.move();
         appelsin.appelsin();
     }
-
-    display();
-
-    turban.move();
 }
 
 function display() {
@@ -51,6 +74,34 @@ function display() {
 
 }
 
+function Death(){
+    if(!dead && missed <= 0){
+        clearInterval(timerID);
+        appelsiner.length = 0;
+        dead = true;
+    }
+}
+
+function GameOverScreen(){
+    document.getElementById("GameOverText").innerHTML = "Game Over";
+    document.getElementById("Restart").innerHTML = "Click to Restart";
+}
+
+function RestartGame(){
+    document.getElementById("GameOverText").innerHTML = "";
+    document.getElementById("Restart").innerHTML = "";
+
+    dead = false;
+    missed = life;
+
+    timerID = setInterval(function () {
+        if(!dead){
+        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+        }  
+    }, 6000); 
+
+    appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+}
 
 function keyPressed() {
 

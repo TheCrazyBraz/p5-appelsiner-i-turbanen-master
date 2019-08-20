@@ -3,7 +3,7 @@
  * Dette script definerer klassen Kurv
 */
 
-function Kurv(x, y, bredde, dybde, speed) {
+function Kurv(x, y, w, h, speed) {
     /* Den første del af funktionen er en "konstruktør".
      * Den tager parametrene og konstruerer et nyt objekt 
      * ud fra dem. Værdierne huskes som hørende til netop 
@@ -12,8 +12,8 @@ function Kurv(x, y, bredde, dybde, speed) {
     
     this.x = x;
     this.y = y;
-    this.bred = bredde;
-    this.dyb = dybde;
+    this.w = w;
+    this.h = h;
     this.speed = speed;
     this.col = [250,230,150];
 
@@ -21,19 +21,19 @@ function Kurv(x, y, bredde, dybde, speed) {
     img = loadImage('turban.png');
     this.tegn = function() {
         fill(this.col);
-        image(img, this.x, this.y, this.bred, this.dyb);
+        image(img, this.x, this.y, this.w, this.h);
     }
     //Denne tegner kurven
 
     this.move = function(tast) {
-        this.x = mouseX
-        this.y = mouseY
+        this.x = mouseX;
+        this.y = mouseY;
     }
 
 //Disse funktioner hjælper kurven med at bevæge sig
 
     this.grebet = function(xa, ya, ra) {
-        if ((ya < this.y+30 && ya > this.y-3) && xa > this.x+ra && xa < this.x+this.bred-ra) {
+        if ((ya < this.y+30 && ya > this.y-3) && xa > this.x+ra && xa < this.x+this.w-ra) {
             return true;
         }
         else {

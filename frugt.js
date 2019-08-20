@@ -7,7 +7,7 @@ var rad = 20;
 var turban;
 
 var score = 0;
-var missed = 10;
+var missed = sketch.life;
 
 
 
@@ -30,9 +30,7 @@ function Appelsin() {
             fill(col);
             ellipse(x, y, rad * 2, rad * 2);
         }
-
         // Her vises turbanen - foreløbig blot en firkant
-
     }
 
     this.move = function () {
@@ -46,8 +44,6 @@ function Appelsin() {
             missed -= 1
             this.shootNew();
         }
-
-        
     }
 
     this.shootNew = function () {
@@ -58,6 +54,7 @@ function Appelsin() {
         xspeed = 6 * Math.random();
         tid = (int)(Math.random() * 400);
     }
+
     this.checkScore = function (turban) {
         // Her checkes om turbanen har fanget appelsinen. Hvis ja, skydes en ny appelsin afsted
         if (yspeed > 0) {
@@ -66,8 +63,8 @@ function Appelsin() {
                 this.shootNew(); 
         
             } 
-            
         }
+
         if (x > width || y > height) {
             missed -= 1
             appelsin.shootNew(); 
