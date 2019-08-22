@@ -127,6 +127,7 @@ function RestartGame(){
 
     //Reseting the players score.
     score = 0;
+    
 }
 
 //A function for checking and displaying scores.
