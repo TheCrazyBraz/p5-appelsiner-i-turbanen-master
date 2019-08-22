@@ -20,7 +20,8 @@ var LocalPlayer = {
     teamNumber: 0,
     IsAlive: true,
     missed: 3,
-    score: 0
+    score: 0,
+    activeFruits: 0
 };
 var OtherPlayer = {
     IsReady: false,
@@ -28,12 +29,15 @@ var OtherPlayer = {
     teamNumber: 0,
     IsAlive: true,
     missed: 3,
-    score: 0
+    score: 0,
+    activeFruits: 0
 };
 var STurban = {
     tX: 0,
     tY: 0
 }
+
+ray = [];
 
 function setup() {
     //Creating new elements to use for displaying information and for the game itself.
@@ -84,7 +88,8 @@ function draw() {
         WaitingScreen();
     }
 
-    //SyncAppelsiner();
+    SpawnNewFruit();
+    SyncAppelsiner();
     SyncTurban();
 }
 
@@ -195,12 +200,41 @@ function SyncAppelsiner(update) {
             for (var i = 0; i < appelsiner.length; i++) {
                 var appelsin = appelsiner[i]
                 var update = ray[i];
-                appelsin.x = update["aX"];
-                appelsin.y = update["aY"];
+                if (update != null) {
+                    if (update["aX"] != null && update["aY"] != null) {
+                        appelsin.x = update["aX"];
+                        appelsin.y = update["aY"];
+                    }
+                }
             }
         }
     }
-    var ray = []
+    ray.length = 0;
+}
+
+function SpawnNewFruit() {
+    if (LocalPlayer["activeFruits"] > OtherPlayer["activeFruits"]) {
+        OtherPlayer["activeFruits"] = LocalPlayer["activeFruits"];
+        const msg = {
+            oFruits: OtherPlayer["activeFruits"]
+        }
+        socket.sendMessage(msg);
+    }
+
+    if (appelsiner.length < LocalPlayer["activeFruits"] && LocalPlayer["IsAlive"] && OtherPlayer["IsAlive"]) {
+        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+        const msg = {
+            oFruits: appelsiner.length
+        }
+        socket.sendMessage(msg);
+    }
+
+    if(appelsiner.length > OtherPlayer["activeFruits"]){
+        const msg = {
+            oFruits: appelsiner.length
+        }
+        socket.sendMessage(msg);
+    }
 }
 
 //Setting up a function that is called when the player has lost all their lifes.
@@ -373,6 +407,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (msg["oScore"] != null) {
                 OtherPlayer["score"] = msg["oScore"];
+            }
+
+            if (msg["oFruits"] != null) {
+                LocalPlayer["activeFruits"] = msg["oFruits"];
             }
         });
     }
