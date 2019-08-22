@@ -5,12 +5,12 @@ var life = 3
 var missed = life;
 var appelsiner = []
 
-var dead = false;
-
 var timerID = 0;
 
 var highScore = 0;
 var bestHighScore = 0
+
+var socket;
 
 var IsGameRunning = false;
 var LocalPlayer = {
@@ -18,18 +18,21 @@ var LocalPlayer = {
     IsOnServer: false,
     teamNumber: 0,
     IsAlive: true,
-    missed: 0
+    missed: 3
 };
 var OtherPlayer = {
     IsReady: false,
     IsOnServer: false,
     teamNumber: 0,
     IsAlive: true,
-    missed: 0
+    missed: 3
 };
+var STurban = {
+    x: 0,
+    y: 0
+}
 
 function setup() {
-
     //Creating new elements to use for displaying information and for the game itself.
     createElement("h1").parent("Overskrift").id("IP");
     createCanvas(750, 600).id('Game');
@@ -44,29 +47,32 @@ function setup() {
 }
 
 function draw() {
+    WaitForBothPlayers();
 
-    document.getElementById("Player1").innerHTML = LocalPlayer["IsReady"];
-    document.getElementById("Player2").innerHTML = OtherPlayer["IsReady"];
+    if (IsGameRunning) {
+        CheckForDamage();
 
-    if (LocalPlayer["IsOnServer"] == true) {
-        if (!dead) {
-            background(0);
-
+        if (!LocalPlayer["IsAlive"]) {
             display();
 
-            turban.move();
+            if (LocalPlayer["teamNumber"] == 2) {
+                turban.move();
 
-            Death();
+                const TurbanMSG = {x: turban.x, y: turban.y}
+                socket.sendMessage(TurbanMSG);
+            } else if (LocalPlayer["teamNumber"] == 1){
+                SyncTurban();
+            }
         } else {
-            background(200);
+            Death();
         }
 
-        for (var i = 0; i < appelsiner.length; i++) {
+        /*for (var i = 0; i < appelsiner.length; i++) {
             var appelsin = appelsiner[i]
             appelsin.checkScore(turban);
             appelsin.move();
             appelsin.appelsin();
-        }
+        }*/
 
         if (document.getElementById("status").innerHTML == "Green") {
             fill(0, 255, 0);
@@ -74,11 +80,13 @@ function draw() {
             fill(255, 0, 0);
         }
         rect(0, height - 50, width, 50);
+    } else {
+        WaitingScreen();
     }
 }
 
 function WaitForBothPlayers() {
-    if (LocalPlayer["IsReady"] == "true" && OtherPlayer["IsReady"] == "true" && IsGameRunning == false) {
+    if (LocalPlayer["IsReady"] == true && OtherPlayer["IsReady"] == true && IsGameRunning == false) {
         StartGame();
     }
 }
@@ -95,40 +103,42 @@ function StartGame() {
             appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
         }
     }, 6000);
+
+    document.getElementById("IP").innerHTML = "";
+    document.getElementById("Player1").innerHTML = "";
+    document.getElementById("Player2").innerHTML = "";
 }
 
 function display() {
-    /*fill(255)
+    background(0);
+
+    fill(255);
     text("Score: " + score, width - 80, 30);
     text("Liv: " + missed, width - 80, 50);
 
-    turban.tegn();*/
-
-    if (LocalPlayer["IsOnServer"] == true) {
-        if (IsGameRunning) {
-            background(0);
-
-            fill(255);
-            text("Score: " + score, width - 80, 30);
-            text("Liv: " + missed, width - 80, 50);
-
-            turban.tegn();
-        } else {
-            background(255);
-        }
-    }
+    turban.tegn();
 }
 
 function WaitingScreen() {
-
+    document.getElementById("Player1").innerHTML = LocalPlayer["IsReady"];
+    document.getElementById("Player2").innerHTML = OtherPlayer["IsReady"];
 }
 
-function CheckForDamage(){
-    if(missed != LocalPlayer["missed"] && LocalPlayer["teamNumber"] == 2){
-
-    } else if(missed != OtherPlayer["missed"] && OtherPlayer["teamNumber"] == 2){
-
+function CheckForDamage() {
+    if (missed != LocalPlayer["missed"] && LocalPlayer["teamNumber"] == 2) {
+        LocalPlayer["missed"] = missed;
+        const msg = {
+            oMissed: LocalPlayer["missed"]
+        }
+        socket.sendMessage(msg);
+    } else if (missed != OtherPlayer["missed"] && OtherPlayer["teamNumber"] == 2) {
+        missed != OtherPlayer["missed"];
     }
+}
+
+function SyncTurban(){
+    turban.x = STurban["x"];
+    turban.y = STurban["y"];
 }
 
 //Setting up a function that is called when the player has lost all their lifes.
@@ -176,7 +186,9 @@ function Death() {
         //Displaying a button so that the player may restart the game.
         document.getElementById("Restart").innerHTML = "Click to Restart";
 
-        const msg = {oMissed: 3};
+        const msg = {
+            oMissed: 3
+        };
         socket.sendMessage(msg);
     }
     //}
@@ -280,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 socket.sendMessage(reply);
             }
 
-            if(msg["oMissed"] != null){
+            if (msg["oMissed"] != null) {
                 OtherPlayer["missed"] = msg["oMissed"];
             }
         });
@@ -290,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
         landingPage.hidden = true;
         socketsPage.hidden = true;
         header.innerText = 'Creator';
-        const socket = ElineSocket.create();
+        socket = ElineSocket.create();
         useSocket(socket);
 
         document.getElementById("IP").innerHTML = socket.id;
@@ -307,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
         socketsPage.hidden = true;
         header.innerText = 'Connector';
         const pin = prompt("Pin: ");
-        const socket = ElineSocket.connect(pin);
+        socket = ElineSocket.connect(pin);
         useSocket(socket);
 
         LocalPlayer["teamNumber"] = 2;
