@@ -44,8 +44,6 @@ function setup() {
     document.getElementById("status").innerHTML = "Green";
     createElement("h1").id("highscore").position(100, 350);
     createElement("h1").id("besthighscore").position(100, 400);
-
-
     noCursor();
 }
 
@@ -144,6 +142,17 @@ function SyncTurban(){
     turban.y = STurban["y"];
 }
 
+function SyncAppelsiner(){
+    if(LocalPlayer["teamNumber"] == 2){
+        for (var i = 0; i < appelsiner.length; i++) {
+            var appelsin = appelsiner[i]
+            appelsin.checkScore(turban);
+            appelsin.move();
+            appelsin.appelsin();
+        }
+    }
+}
+
 //Setting up a function that is called when the player has lost all their lifes.
 function Death() {
     /*
@@ -193,8 +202,13 @@ function Death() {
             oMissed: 3
         };
         socket.sendMessage(msg);
+
+        HighScoreCounter();
+
+        cursor();
+
+
     }
-    //}
 }
 
 //Setting up a function to handle the restart of the game after the player has pressed the "Restart" button.
