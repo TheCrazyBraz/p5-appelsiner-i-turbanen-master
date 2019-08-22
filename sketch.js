@@ -96,6 +96,9 @@ function Death(){
         document.getElementById("Restart").innerHTML = "Click to Restart";
 
         HighScoreCounter();
+
+        cursor();
+
     }
 }
 

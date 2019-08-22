@@ -21,6 +21,7 @@ function Appelsin() {
     var rad = 20;
     var newspeed = yspeed;
 
+    var rot = 0.1;
     
     img2 = loadImage('appelsin.png');
 
@@ -31,9 +32,10 @@ function Appelsin() {
         }
         if (tid < 100) {
             fill(col);
-
-            image(img2, x-20, y-20, rad*2, rad*2);
-           
+            translate (x + rad / 2, y + rad / 2);
+            rotate(rot);
+            image(img2, -rad, -rad, rad*2, rad*2);
+            resetMatrix();
         }
        
     }
@@ -44,6 +46,7 @@ function Appelsin() {
             x += xspeed;
             y += yspeed;
             yspeed += grav;
+            rot += 0.1
         }
         if (x > width || y > height) {
             missed -= 1
