@@ -72,7 +72,7 @@ function Appelsin() {
 
         if (x > width || y > height) {
             missed -= 1
-            appelsin.shootNew(); 
+            this.shootNew(); 
         }
     }
 }
