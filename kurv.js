@@ -3,15 +3,15 @@
  * Dette script definerer klassen Kurv
 */
 
-function Kurv(x, y, w, h, speed) {
+function Kurv(X, Y, w, h, speed) {
     /* Den første del af funktionen er en "konstruktør".
      * Den tager parametrene og konstruerer et nyt objekt 
      * ud fra dem. Værdierne huskes som hørende til netop 
      * dette objekt ved hjælp af nøgleordet this
      */
     
-    this.x = x;
-    this.y = y;
+    this.x = X;
+    this.y = Y;
     this.w = w;
     this.h = h;
     this.speed = speed;

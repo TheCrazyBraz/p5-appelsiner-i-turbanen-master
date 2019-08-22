@@ -13,23 +13,26 @@ var bestHighScore = 0
 var socket;
 
 var IsGameRunning = false;
+
 var LocalPlayer = {
     IsReady: false,
     IsOnServer: false,
     teamNumber: 0,
     IsAlive: true,
-    missed: 3
+    missed: 3,
+    score: 0
 };
 var OtherPlayer = {
     IsReady: false,
     IsOnServer: false,
     teamNumber: 0,
     IsAlive: true,
-    missed: 3
+    missed: 3,
+    score: 0
 };
 var STurban = {
-    x: 0,
-    y: 0
+    tX: 0,
+    tY: 0
 }
 
 function setup() {
@@ -44,7 +47,7 @@ function setup() {
     document.getElementById("status").innerHTML = "Green";
     createElement("h1").id("highscore").position(100, 350);
     createElement("h1").id("besthighscore").position(100, 400);
-    noCursor();
+    //noCursor();
 }
 
 function draw() {
@@ -53,27 +56,23 @@ function draw() {
     if (IsGameRunning) {
         CheckForDamage();
 
-        if (!LocalPlayer["IsAlive"]) {
+        if (LocalPlayer["IsAlive"]) {
             display();
 
             if (LocalPlayer["teamNumber"] == 2) {
                 turban.move();
 
-                const TurbanMSG = {x: turban.x, y: turban.y}
+                const TurbanMSG = {
+                    x: turban.x,
+                    y: turban.y
+                }
                 socket.sendMessage(TurbanMSG);
-            } else if (LocalPlayer["teamNumber"] == 1){
+            } else if (LocalPlayer["teamNumber"] == 1) {
                 SyncTurban();
             }
         } else {
             Death();
         }
-
-        /*for (var i = 0; i < appelsiner.length; i++) {
-            var appelsin = appelsiner[i]
-            appelsin.checkScore(turban);
-            appelsin.move();
-            appelsin.appelsin();
-        }*/
 
         if (document.getElementById("status").innerHTML == "Green") {
             fill(0, 255, 0);
@@ -84,6 +83,9 @@ function draw() {
     } else {
         WaitingScreen();
     }
+
+    //SyncAppelsiner();
+    SyncTurban();
 }
 
 function WaitForBothPlayers() {
@@ -99,25 +101,36 @@ function StartGame() {
     turban = new Kurv(700, 100, 70, 50, 10);
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
 
-    timerID = setInterval(function () {
-        if (!dead) {
-            appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-        }
-    }, 6000);
-
+    if (LocalPlayer["teamNumber"] == 1) {
+        timerID = setInterval(function () {
+            if (IsGameRunning) {
+                appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+            }
+        }, 6000);
+    }
     document.getElementById("IP").innerHTML = "";
     document.getElementById("Player1").innerHTML = "";
     document.getElementById("Player2").innerHTML = "";
+
+    LocalPlayer["IsAlive"] = true;
+    OtherPlayer["IsAlive"] = true;
 }
 
 function display() {
     background(0);
 
     fill(255);
-    text("Score: " + score, width - 80, 30);
-    text("Liv: " + missed, width - 80, 50);
+    text("Score: " + LocalPlayer["score"], width - 80, 30);
+    text("Liv: " + LocalPlayer["missed"], width - 80, 50);
 
     turban.tegn();
+
+    for (var i = 0; i < appelsiner.length; i++) {
+        var appelsin = appelsiner[i]
+        appelsin.checkScore(turban);
+        appelsin.move();
+        appelsin.appelsin();
+    }
 }
 
 function WaitingScreen() {
@@ -132,25 +145,62 @@ function CheckForDamage() {
             oMissed: LocalPlayer["missed"]
         }
         socket.sendMessage(msg);
-    } else if (missed != OtherPlayer["missed"] && OtherPlayer["teamNumber"] == 2) {
-        missed != OtherPlayer["missed"];
+    } else if (missed != OtherPlayer["missed"] && LocalPlayer["teamNumber"] == 1) {
+        missed = OtherPlayer["missed"];
     }
 }
 
-function SyncTurban(){
-    turban.x = STurban["x"];
-    turban.y = STurban["y"];
+function CheckForScore() {
+    if (score != LocalPlayer["score"] && LocalPlayer["teamNumber"] == 1) {
+        LocalPlayer["score"] = score;
+        const msg = {
+            oScore: LocalPlayer["score"]
+        }
+        socket.sendMessage();
+    } else if (score != OtherPlayer["score"] && LocalPlayer["teamNumber"] == 2) {
+        score = OtherPlayer["score"];
+    }
 }
 
-function SyncAppelsiner(){
-    if(LocalPlayer["teamNumber"] == 2){
-        for (var i = 0; i < appelsiner.length; i++) {
-            var appelsin = appelsiner[i]
-            appelsin.checkScore(turban);
-            appelsin.move();
-            appelsin.appelsin();
+function SyncTurban(x, y) {
+    STurban["tX"] = x;
+    STurban["tY"] = y;
+
+    if (LocalPlayer["teamNumber"] == 1 && STurban["tX"] != null && STurban["tY"] != null && turban != null) {
+        turban.x = lerp(turban.x, STurban["tX"], 0.5);
+        turban.y = lerp(turban.y, STurban["tY"], 0.5);
+    } else if (LocalPlayer["teamNumber"] == 2 && turban != null) {
+        const msg = {
+            tX: turban.x,
+            tY: turban.y
+        }
+        socket.sendMessage(msg);
+    }
+}
+
+function SyncAppelsiner(update) {
+    if (appelsiner.length >= 0) {
+        if (LocalPlayer["teamNumber"] == 1) {
+            for (var i = 0; i < appelsiner.length; i++) {
+                var appelsin = appelsiner[i]
+
+                ray.push({
+                    x: appelsin.x,
+                    y: appelsin.y
+                })
+            }
+
+            socket.sendMessage(ray);
+        } else if (LocalPlayer["teamNumber"] == 2 && ray.length >= 0) {
+            for (var i = 0; i < appelsiner.length; i++) {
+                var appelsin = appelsiner[i]
+                var update = ray[i];
+                appelsin.x = update["aX"];
+                appelsin.y = update["aY"];
+            }
         }
     }
+    var ray = []
 }
 
 //Setting up a function that is called when the player has lost all their lifes.
@@ -171,7 +221,7 @@ function Death() {
     //Displaying a button so that the player may restart the game.
     document.getElementById("Restart").innerHTML = "Click to Restart";
     */
-    if (OtherPlayer["teamNumber"] == 2 && OtherPlayer["missed"] == 3) {
+    if (OtherPlayer["teamNumber"] == 2 && OtherPlayer["missed"] == 0) {
         clearInterval(timerID);
         //Removes the current fruits.
         appelsiner.length = 0;
@@ -185,7 +235,7 @@ function Death() {
         document.getElementById("Restart").innerHTML = "Click to Restart";
     }
 
-    if (LocalPlayer["teamNumber"] == 2 && LocalPlayer["missed"] == 3) {
+    if (LocalPlayer["teamNumber"] == 2 && LocalPlayer["missed"] == 0) {
         clearInterval(timerID);
         //Removes the current fruits.
         appelsiner.length = 0;
@@ -218,12 +268,11 @@ function RestartGame() {
     document.getElementById("Restart").innerHTML = "";
 
     //The player is no longer dead and has been giving the same amount of life as when first started.
-    dead = false;
     missed = life;
 
     //Starting a new interval to increasse the dificultie over time.
     timerID = setInterval(function () {
-        if (!dead) {
+        if (IsGameRunning) {
             appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
         }
     }, 6000);
@@ -239,7 +288,7 @@ function RestartGame() {
 
     //Reseting the players score.
     score = 0;
-    
+
 }
 
 //A function for checking and displaying scores.
@@ -312,6 +361,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (msg["oMissed"] != null) {
                 OtherPlayer["missed"] = msg["oMissed"];
+            }
+
+            if (msg["aX"] != null && msg["aY"] != null) {
+                SyncAppelsiner(msg);
+            }
+
+            if (msg["tX"] != null && msg["tY"] != null) {
+                SyncTurban(msg["tX"], msg["tY"]);
+            }
+
+            if (msg["oScore"] != null) {
+                OtherPlayer["score"] = msg["oScore"];
             }
         });
     }
