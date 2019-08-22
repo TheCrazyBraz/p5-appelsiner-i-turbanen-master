@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8">
     <title>Appelsiner i turbanen </title>
+
+    <script src="eline-sockets.js" type="text/javascript"></script>
+
     <script src="libraries/p5.js" type="text/javascript"></script>
 
     <script src="libraries/p5.dom.js" type="text/javascript"></script>
@@ -12,12 +15,30 @@
     <script src="kurv.js" type="text/javascript"></script>
     <script src="frugt.js" type="text/javascript"></script>
     <style> body {padding: 0; margin: 0;} canvas {vertical-align: top;} </style>
-
-    <script src="eline-sockets.js" type="text/javascript"></script>
-    <script src="MultiManager.js" type="text/javascript"></script>
   </head>
   <body>
     <div id="Overskrift">
+      <h1 id="Player1">Is not Ready</h1>
+      <h1 id="Player2">Is not Ready</h1>
     </div>
+    <div id='landing-page'>
+      <h1>Eline sockets demo</h1>
+      <button id='create-btn'>Create</button>
+      <button id='connect-btn'>Connect</button>
+  </div>
+
+  <div id='eline-sockets'>
+      <h1>
+          <span id='header'></span>
+          (<span id='socket-pin'></span>)
+      </h1>
+      <input placeholder="message" id='message-inp'/>
+      <button id='send'>Send</button>
+
+      <h2>Received</h2>
+      <ul id='messages'>
+
+      </ul>
+  </div>
   </body>
 </html>
