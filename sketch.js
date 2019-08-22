@@ -25,6 +25,8 @@ function setup() {
     createElement("h1").id("highscore").position(100, 350);
     createElement("h1").id("besthighscore").position(100, 400);
 
+    noCursor();
+
     x = rad;
     turban = new Kurv(700, 100, 70, 50, 10);
     appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
@@ -33,7 +35,7 @@ function setup() {
         if(!dead){
         appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
         }  
-    }, 6000);
+    }, 60000);
 }
 
 function draw() {

@@ -21,6 +21,7 @@ function Appelsin() {
     var rad = 20;
     var newspeed = yspeed;
     
+    img2 = loadImage('appelsin.png');
     this.appelsin = function () {
         //Her skal vi sørge for at appelsinen bliver vist, hvis den skal vises
         if (tid > 0) {
@@ -28,9 +29,9 @@ function Appelsin() {
         }
         if (tid < 100) {
             fill(col);
-            ellipse(x, y, rad * 2, rad * 2);
+            image(img2, x-20, y-20, rad*2, rad*2);
         }
-        // Her vises turbanen - foreløbig blot en firkant
+       
     }
 
     this.move = function () {
