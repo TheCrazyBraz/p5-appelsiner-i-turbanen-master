@@ -44,6 +44,9 @@ function setup() {
     document.getElementById("status").innerHTML = "Green";
     createElement("h1").id("highscore").position(100, 350);
     createElement("h1").id("besthighscore").position(100, 400);
+
+
+    noCursor();
 }
 
 function draw() {
@@ -222,6 +225,7 @@ function RestartGame() {
 
     //Reseting the players score.
     score = 0;
+    
 }
 
 //A function for checking and displaying scores.
