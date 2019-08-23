@@ -47,7 +47,7 @@ function setup() {
     createElement("h1").id("GameOverText").position(100, 200).parent("container");
     createElement().position(100, 300).id("Restart").mousePressed(RestartGame).parent("container");
     createElement("div").id("status").hide();
-    createElement("p", "Game is Running").position(325, 635).id("StatusText");
+    createElement("p").position(325, 635).id("StatusText");
     document.getElementById("status").innerHTML = "Green";
     createElement("h1").id("highscore").position(100, 350);
     createElement("h1").id("besthighscore").position(100, 400);
@@ -104,9 +104,10 @@ function StartGame() {
 
     x = rad;
     turban = new Kurv(700, 100, 70, 50, 10);
-    appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
 
     if (LocalPlayer["teamNumber"] == 1) {
+        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+
         timerID = setInterval(function () {
             if (IsGameRunning) {
                 appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
@@ -184,6 +185,10 @@ function SyncTurban(x, y) {
 }
 
 function SyncAppelsiner(update) {
+    for (var i = 0; i < appelsiner.length; i++) {
+        appelsiner.playerTeam = LocalPlayer["teamNumber"];
+    }
+
     if (appelsiner.length >= 0) {
         if (LocalPlayer["teamNumber"] == 1) {
             for (var i = 0; i < appelsiner.length; i++) {
@@ -191,23 +196,35 @@ function SyncAppelsiner(update) {
 
                 ray.push({
                     x: appelsin.x,
-                    y: appelsin.y
+                    y: appelsin.y,
+                    xSpeed: appelsin.xspeed,
+                    ySpeed: appelsin.yspeed
                 })
-            }
 
-            socket.sendMessage(ray);
-        } else if (LocalPlayer["teamNumber"] == 2 && ray.length >= 0) {
-            for (var i = 0; i < appelsiner.length; i++) {
-                var appelsin = appelsiner[i]
-                var update = ray[i];
-                if (update != null) {
-                    if (update["aX"] != null && update["aY"] != null) {
-                        appelsin.x = update["aX"];
-                        appelsin.y = update["aY"];
+                if (i == appelsiner.length) {
+                    const msg = {
+                        xyAppelsin: ray
                     }
+                    socket.sendMessage(msg);
                 }
             }
         }
+
+        /*if (LocalPlayer["teamNumber"] == 2 && update["xyAppelsin"] != null) {
+            for (var i = 0; i < appelsiner.length; i++) {
+                var appelsin = appelsiner[i]
+                ray = update["xyAppelsin"];
+                var newPositions = ray[i];
+                if (newPositions != null) {
+                    if (newPositions["aX"] != null && newPositions["aY"] != null) {
+                        appelsin.x = update["aX"];
+                        appelsin.y = update["aY"];
+                        appelsin.xspeed = update["xSpeed"];
+                        appelsin.yspeed = update["ySpeed"];
+                    }
+                }
+            }
+        }*/
     }
     ray.length = 0;
 }
@@ -223,13 +240,14 @@ function SpawnNewFruit() {
 
     if (appelsiner.length < LocalPlayer["activeFruits"] && LocalPlayer["IsAlive"] && OtherPlayer["IsAlive"]) {
         appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+
         const msg = {
             oFruits: appelsiner.length
         }
         socket.sendMessage(msg);
     }
 
-    if(appelsiner.length > OtherPlayer["activeFruits"]){
+    if (appelsiner.length > OtherPlayer["activeFruits"]) {
         const msg = {
             oFruits: appelsiner.length
         }
@@ -305,13 +323,15 @@ function RestartGame() {
     missed = life;
 
     //Starting a new interval to increasse the dificultie over time.
-    timerID = setInterval(function () {
-        if (IsGameRunning) {
-            appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-        }
-    }, 6000);
+    if (LocalPlayer["teamNumber"] == 1) {
+        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
 
-    appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+        timerID = setInterval(function () {
+            if (IsGameRunning) {
+                appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
+            }
+        }, 6000);
+    }
 
     //Setting the status to green to show the game is running again.
     document.getElementById("status").innerHTML = "Green"
@@ -383,21 +403,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (msg["oTeam"] != null && msg["oReady"] != null && msg["oServer"] != null) {
                 OtherPlayer["teamNumber"] = msg["oTeam"];
                 OtherPlayer["IsReady"] = msg["oReady"];
-                OtherPlayer["isReady"] = msg["oServer"];
+                OtherPlayer["IsOnServer"] = msg["oServer"];
 
-                const reply = {
-                    oTeam: LocalPlayer["teamNumber"],
-                    oReady: LocalPlayer["IsReady"],
-                    oServer: LocalPlayer["IsOnServer"]
-                }
-                socket.sendMessage(reply);
+                msg["oTeam"] = LocalPlayer["teamNumber"];
+                msg["oReady"] = LocalPlayer["IsReady"];
+                msg["oServer"] = LocalPlayer["IsOnServer"];
+                socket.sendMessage(msg);
             }
 
             if (msg["oMissed"] != null) {
                 OtherPlayer["missed"] = msg["oMissed"];
             }
 
-            if (msg["aX"] != null && msg["aY"] != null) {
+            if (msg["xyAppelsin"] != null) {
                 SyncAppelsiner(msg);
             }
 
@@ -444,9 +462,9 @@ document.addEventListener('DOMContentLoaded', function () {
         LocalPlayer["IsOnServer"] = true;
 
         const msg = {
-            oTeam: 2,
-            oReady: true,
-            oServer: true
+            oTeam: LocalPlayer["teamNumber"],
+            oReady: LocalPlayer["IsReady"],
+            oServer: LocalPlayer["IsOnServer"]
         }
         socket.sendMessage(msg);
     });

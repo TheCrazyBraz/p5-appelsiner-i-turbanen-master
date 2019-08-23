@@ -9,8 +9,6 @@ var turban;
 var score = 0;
 var missed = 3;
 
-
-
 function Appelsin() {
     var tid = 0;
     var x = 0;
@@ -22,7 +20,7 @@ function Appelsin() {
     var newspeed = yspeed;
 
     var rot = 0.1;
-    
+
     img2 = loadImage('appelsin.png');
 
     this.appelsin = function () {
@@ -32,12 +30,12 @@ function Appelsin() {
         }
         if (tid < 100) {
             fill(col);
-            translate (x + rad / 2, y + rad / 2);
+            translate(x + rad / 2, y + rad / 2);
             rotate(rot);
-            image(img2, -rad, -rad, rad*2, rad*2);
+            image(img2, -rad, -rad, rad * 2, rad * 2);
             resetMatrix();
         }
-       
+
     }
 
     this.move = function () {
@@ -66,16 +64,16 @@ function Appelsin() {
     this.checkScore = function (turban) {
         // Her checkes om turbanen har fanget appelsinen. Hvis ja, skydes en ny appelsin afsted
         if (yspeed > 0) {
-            if (turban.grebet(x, y, rad)) {
+            if (turban.grebet(x, y, rad) && playerTeam == 2) {
                 score += 1;
-                this.shootNew(); 
-        
-            } 
+                this.shootNew();
+
+            }
         }
 
         if (x > width || y > height) {
             missed -= 1
-            this.shootNew(); 
+            this.shootNew();
         }
     }
 }
