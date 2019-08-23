@@ -37,7 +37,7 @@ var STurban = {
     tY: 0
 }
 
-ray = [];
+var ray = [];
 
 function setup() {
     //Creating new elements to use for displaying information and for the game itself.
@@ -89,7 +89,7 @@ function draw() {
     }
 
     SpawnNewFruit();
-    SyncAppelsiner();
+    //SyncAppelsiner();
     SyncTurban();
 }
 
@@ -184,9 +184,9 @@ function SyncTurban(x, y) {
     }
 }
 
-function SyncAppelsiner(update) {
+function SyncAppelsiner(msg, isReceived) {
     for (var i = 0; i < appelsiner.length; i++) {
-        appelsiner.playerTeam = LocalPlayer["teamNumber"];
+        appelsiner[i].playerTeam = LocalPlayer["teamNumber"];
     }
 
     if (appelsiner.length >= 0) {
@@ -201,7 +201,7 @@ function SyncAppelsiner(update) {
                     ySpeed: appelsin.yspeed
                 })
 
-                if (i == appelsiner.length) {
+                if (i == appelsiner.length - 1) {
                     const msg = {
                         xyAppelsin: ray
                     }
@@ -210,27 +210,29 @@ function SyncAppelsiner(update) {
             }
         }
 
-        /*if (LocalPlayer["teamNumber"] == 2 && update["xyAppelsin"] != null) {
-            for (var i = 0; i < appelsiner.length; i++) {
-                var appelsin = appelsiner[i]
-                ray = update["xyAppelsin"];
-                var newPositions = ray[i];
-                if (newPositions != null) {
-                    if (newPositions["aX"] != null && newPositions["aY"] != null) {
-                        appelsin.x = update["aX"];
-                        appelsin.y = update["aY"];
-                        appelsin.xspeed = update["xSpeed"];
-                        appelsin.yspeed = update["ySpeed"];
+        if (LocalPlayer["teamNumber"] == 2 && isReceived) {
+            if (msg["xyAppelsin"] != null) {
+                ray = msg["xyAppelsin"];
+                for (var i = 0; i < appelsiner.length; i++) {
+                    var appelsin = appelsiner[i]
+                    var newPositions = ray[i];
+                    if (newPositions != null) {
+                        if (newPositions["aX"] != null && newPositions["aY"] != null) {
+                            appelsin.x = newPositions["aX"];
+                            appelsin.y = newPositions["aY"];
+                            appelsin.xspeed = newPositions["xSpeed"];
+                            appelsin.yspeed = newPositions["ySpeed"];
+                        }
                     }
                 }
             }
-        }*/
+        }
     }
     ray.length = 0;
 }
 
 function SpawnNewFruit() {
-    if (LocalPlayer["activeFruits"] > OtherPlayer["activeFruits"]) {
+    /*if (LocalPlayer["activeFruits"] > OtherPlayer["activeFruits"]) {
         OtherPlayer["activeFruits"] = LocalPlayer["activeFruits"];
         const msg = {
             oFruits: OtherPlayer["activeFruits"]
@@ -253,6 +255,7 @@ function SpawnNewFruit() {
         }
         socket.sendMessage(msg);
     }
+    */
 }
 
 //Setting up a function that is called when the player has lost all their lifes.
@@ -416,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (msg["xyAppelsin"] != null) {
-                SyncAppelsiner(msg);
+                SyncAppelsiner(msg, true);
             }
 
             if (msg["tX"] != null && msg["tY"] != null) {

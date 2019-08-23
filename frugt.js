@@ -9,6 +9,8 @@ var turban;
 var score = 0;
 var missed = 3;
 
+var playerTeam = 0;
+
 function Appelsin() {
     var tid = 0;
     var x = 0;
