@@ -16,10 +16,9 @@ function Appelsin(startY) {
     this.x = 0;
     this.y = startY;
     var xspeed = random(2, 6);
-    var yspeed = random(0, this.y / 600 * 10 * -1);
+    var yspeed = random(0, this.y / 600 * 10) * -1;
     this.yspeed = yspeed;
     var rad = 20;
-    var newspeed = yspeed;
 
     this.rot = 0.1;
     // Loader billedet for appelsinen
@@ -59,7 +58,7 @@ function Appelsin(startY) {
         //Her skal vi sørge for at en ny appelsin skydes afsted 
         this.x = rad;
         this.y = random(0, 550);
-        yspeed = random(0, this.y / 600 * 10 * -1);
+        yspeed = random(0, this.y / 600 * 10) * -1;
         xspeed = random(2, 6);
         tid = (int)(Math.random() * 400);
     }
