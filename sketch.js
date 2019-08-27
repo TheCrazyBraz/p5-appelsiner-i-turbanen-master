@@ -2,7 +2,7 @@
 var turban;
 var tid = 20;
 var score = 0;
-var life = 3
+var life = 10;
 var missed = life;
 var appelsiner = []
 
@@ -21,14 +21,14 @@ var updateDelay = false;
 var LocalPlayer = {
     IsReady: false,
     teamNumber: 0,
-    missed: 3,
+    missed: life,
     score: 0,
     activeFruits: 0
 };
 var OtherPlayer = {
     IsReady: false,
     teamNumber: 0,
-    missed: 3,
+    missed: life,
     score: 0,
     activeFruits: 0
 };
