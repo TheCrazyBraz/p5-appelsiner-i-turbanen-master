@@ -15,21 +15,19 @@ var socket;
 
 var IsGameRunning = false;
 
+var updateDelay = false;
+
 //Variable for lokale og externe spillere
 var LocalPlayer = {
     IsReady: false,
-    IsOnServer: false,
     teamNumber: 0,
-    IsAlive: true,
     missed: 3,
     score: 0,
     activeFruits: 0
 };
 var OtherPlayer = {
     IsReady: false,
-    IsOnServer: false,
     teamNumber: 0,
-    IsAlive: true,
     missed: 3,
     score: 0,
     activeFruits: 0
@@ -85,7 +83,7 @@ function draw() {
         WaitingScreen();
     }
 }
-
+//Vente funktion der scanner om de to spillere er klar
 function WaitForBothPlayers() {
     if (LocalPlayer["IsReady"] == true && OtherPlayer["IsReady"] == true && IsGameRunning == false && !FirstStart) {
         StartGame();
@@ -96,7 +94,7 @@ function WaitForBothPlayers() {
         RestartGame();
     }
 }
-
+//Setup til at starte spillet
 function StartGame() {
     IsGameRunning = true;
 
@@ -111,6 +109,7 @@ function StartGame() {
     OtherPlayer["missed"] = life;
 }
 
+//Laver spillet
 function display() {
     background(0);
 
@@ -127,6 +126,7 @@ function display() {
     }
 }
 
+// Vente Skærm
 function WaitingScreen() {
     background(255);
 
@@ -185,29 +185,35 @@ function SyncTurban(x, y) {
 }
 
 function SyncAppelsiner(msg, isReceived) {
-    if (LocalPlayer["teamNumber"] == 1 && isReceived == true) {
+    if (LocalPlayer["teamNumber"] == 1 && isReceived == true && updateDelay) {
         ray = msg["xyAppelsin"];
-
         for (var i = 0; i < ray.length; i++) {
             appelsin = appelsiner[i];
             var newPositions = ray[i];
-            appelsin.x = lerp(appelsin.x, newPositions["x"], 0.5);
-            appelsin.y = lerp(appelsin.y, newPositions["y"], 0.5);
+
+            if (newPositions["x"] != null && newPositions["y"] != null && newPositions["rot"] != null) {
+                appelsin.x = lerp(appelsin.x, newPositions["x"], 0.5);
+                appelsin.y = lerp(appelsin.y, newPositions["y"], 0.5);
+                appelsin.rot = lerp(appelsin.rot, newPositions["rot"], 0.5);
+            }
         }
     }
 
-    if (LocalPlayer["teamNumber"] == 2) {
+    if (LocalPlayer["teamNumber"] == 2 && appelsiner.length != null) {
         ray.length = 0;
 
         for (var i = 0; i < appelsiner.length; i++) {
-            var appelsin = appelsiner[i]
-            appelsin.move();
+            if (appelsiner[i] != null) {
+                var appelsin = appelsiner[i];
+                appelsin.move();
 
-            if (appelsin.x != null && appelsin.y != null) {
-                ray.push({
-                    x: appelsin.x,
-                    y: appelsin.y
-                });
+                if (appelsin.x != null && appelsin.y != null && appelsin.rot != null) {
+                    ray.push({
+                        x: appelsin.x,
+                        y: appelsin.y,
+                        rot: appelsin.rot
+                    });
+                }
             }
         }
 
@@ -216,23 +222,26 @@ function SyncAppelsiner(msg, isReceived) {
         }
         socket.sendMessage(msg);
     }
+
+    updateDelay = true;
 }
 
-function SpawnNewFruit(msg) {
+function SpawnNewFruit(newFruits, yPos) {
     if (LocalPlayer["teamNumber"] == 1) {
-        appelsiner.push(new Appelsin(LocalPlayer["teamNumber"], mouseY));
+        appelsiner.push(new Appelsin(mouseY));
 
         OtherPlayer["activeFruits"] += 1;
 
         const msg = {
-            oFruitSpawn: 1
+            oFruitSpawn: 1,
+            oMouse: mouseY
         }
         socket.sendMessage(msg);
     }
 
     if (LocalPlayer["teamNumber"] == 2) {
-        for (var i = 0; i < msg; i++) {
-            appelsiner.push(new Appelsin(LocalPlayer["teamNumber"]));
+        for (var i = 0; i < newFruits; i++) {
+            appelsiner.push(new Appelsin(yPos));
             LocalPlayer["activeFruits"] += 1;
         }
     }
@@ -257,6 +266,8 @@ function DeathScreen() {
         document.getElementById("Restart").innerHTML = "Click to Restart";
 
         HighScoreCounter();
+
+        updateDelay = false;
     }
 
     if (LocalPlayer["teamNumber"] == 2 && LocalPlayer["missed"] == 0) {
@@ -359,6 +370,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const sendBtn = document.getElementById('send');
     socketsPage.hidden = true;
 
+    document.getElementById("DemoName").innerHTML = "Eline Socket Demo: Appelsiner i Turbanen"
+    document.getElementById("MadeBy").innerHTML = "Made by Marc and Mads"
+
     // Når vi først har vores socket, er logikken den samme
     function useSocket(socket) {
         // skriv hvilket id socket'en bruger
@@ -407,6 +421,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 CheckForDamage(msg, true);
             }
 
+            if (msg["oFruitSpawn"] != null && msg["oMouse"] != null) {
+                SpawnNewFruit(msg["oFruitSpawn"], msg["oMouse"])
+                msg["oFruitSpawn"] = null;
+            }
+
             if (msg["xyAppelsin"] != null && msg["xyAppelsin"].length > 0) {
                 SyncAppelsiner(msg, true);
             }
@@ -417,11 +436,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (msg["oScore"] != null) {
                 CheckForScore(msg, true)
-            }
-
-            if (msg["oFruitSpawn"] != null) {
-                SpawnNewFruit(msg["oFruitSpawn"], LocalPlayer["teamNumber"])
-                msg["oFruitSpawn"] = null;
             }
 
             if (msg["oReady"] != null) {
