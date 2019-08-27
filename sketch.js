@@ -1,3 +1,4 @@
+//alle vores variable
 var turban;
 var tid = 20;
 var score = 0;
@@ -5,7 +6,7 @@ var life = 3
 var missed = life;
 var appelsiner = []
 
-var timerID = 0;
+var FirstStart = false;
 
 var highScore = 0;
 var bestHighScore = 0
@@ -14,6 +15,7 @@ var socket;
 
 var IsGameRunning = false;
 
+//Variable for lokale og externe spillere
 var LocalPlayer = {
     IsReady: false,
     IsOnServer: false,
@@ -45,13 +47,12 @@ function setup() {
     createCanvas(750, 600).id('Game');
     createElement("div").id("container");
     createElement("h1").id("GameOverText").position(100, 200).parent("container");
-    createElement().position(100, 300).id("Restart").mousePressed(RestartGame).parent("container");
+    createElement().position(100, 300).id("Restart").mousePressed(ReadyButtom).parent("container");
     createElement("div").id("status").hide();
     createElement("p").position(325, 635).id("StatusText");
     document.getElementById("status").innerHTML = "Green";
     createElement("h1").id("highscore").position(100, 350);
     createElement("h1").id("besthighscore").position(100, 400);
-    //noCursor();
 }
 
 function draw() {
@@ -59,8 +60,11 @@ function draw() {
 
     if (IsGameRunning) {
         CheckForDamage();
+        CheckForScore();
+        SyncAppelsiner(null, false);
+        SyncTurban();
 
-        if (LocalPlayer["IsAlive"]) {
+        if (LocalPlayer["missed"] > 0) {
             display();
 
             if (LocalPlayer["teamNumber"] == 2) {
@@ -75,27 +79,21 @@ function draw() {
                 SyncTurban();
             }
         } else {
-            Death();
+            DeathScreen();
         }
-
-        if (document.getElementById("status").innerHTML == "Green") {
-            fill(0, 255, 0);
-        } else if (document.getElementById("status").innerHTML == "Red") {
-            fill(255, 0, 0);
-        }
-        rect(0, height - 50, width, 50);
     } else {
         WaitingScreen();
     }
-
-    SpawnNewFruit();
-    //SyncAppelsiner();
-    SyncTurban();
 }
 
 function WaitForBothPlayers() {
-    if (LocalPlayer["IsReady"] == true && OtherPlayer["IsReady"] == true && IsGameRunning == false) {
+    if (LocalPlayer["IsReady"] == true && OtherPlayer["IsReady"] == true && IsGameRunning == false && !FirstStart) {
         StartGame();
+        FirstStart = true;
+    }
+
+    if (LocalPlayer["IsReady"] == true && OtherPlayer["IsReady"] == true && IsGameRunning == false && FirstStart) {
+        RestartGame();
     }
 }
 
@@ -105,21 +103,12 @@ function StartGame() {
     x = rad;
     turban = new Kurv(700, 100, 70, 50, 10);
 
-    if (LocalPlayer["teamNumber"] == 1) {
-        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-
-        timerID = setInterval(function () {
-            if (IsGameRunning) {
-                appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-            }
-        }, 6000);
-    }
     document.getElementById("IP").innerHTML = "";
     document.getElementById("Player1").innerHTML = "";
     document.getElementById("Player2").innerHTML = "";
 
-    LocalPlayer["IsAlive"] = true;
-    OtherPlayer["IsAlive"] = true;
+    LocalPlayer["missed"] = life;
+    OtherPlayer["missed"] = life;
 }
 
 function display() {
@@ -134,37 +123,46 @@ function display() {
     for (var i = 0; i < appelsiner.length; i++) {
         var appelsin = appelsiner[i]
         appelsin.checkScore(turban);
-        appelsin.move();
         appelsin.appelsin();
     }
 }
 
 function WaitingScreen() {
-    document.getElementById("Player1").innerHTML = LocalPlayer["IsReady"];
-    document.getElementById("Player2").innerHTML = OtherPlayer["IsReady"];
+    background(255);
+
+    document.getElementById("Player1").innerHTML = "Your Connection Status: " + LocalPlayer["IsReady"];
+    document.getElementById("Player2").innerHTML = "Opponent Connection Status: " + OtherPlayer["IsReady"];
 }
 
-function CheckForDamage() {
-    if (missed != LocalPlayer["missed"] && LocalPlayer["teamNumber"] == 2) {
-        LocalPlayer["missed"] = missed;
+function CheckForDamage(msg, isReceived) {
+    if (LocalPlayer["teamNumber"] == 1 && isReceived) {
+        LocalPlayer["missed"] = msg["oMissed"];
+    }
+
+    if (LocalPlayer["teamNumber"] == 2) {
+        LocalPlayer["missed"] = missed
+
         const msg = {
             oMissed: LocalPlayer["missed"]
         }
+
         socket.sendMessage(msg);
-    } else if (missed != OtherPlayer["missed"] && LocalPlayer["teamNumber"] == 1) {
-        missed = OtherPlayer["missed"];
     }
 }
 
-function CheckForScore() {
-    if (score != LocalPlayer["score"] && LocalPlayer["teamNumber"] == 1) {
-        LocalPlayer["score"] = score;
+function CheckForScore(msg, isReceived) {
+    if (LocalPlayer["teamNumber"] == 1 && isReceived) {
+        LocalPlayer["score"] = msg["oScore"];
+    }
+
+    if (LocalPlayer["teamNumber"] == 2) {
+        LocalPlayer["score"] = score
+
         const msg = {
             oScore: LocalPlayer["score"]
         }
-        socket.sendMessage();
-    } else if (score != OtherPlayer["score"] && LocalPlayer["teamNumber"] == 2) {
-        score = OtherPlayer["score"];
+
+        socket.sendMessage(msg);
     }
 }
 
@@ -175,7 +173,9 @@ function SyncTurban(x, y) {
     if (LocalPlayer["teamNumber"] == 1 && STurban["tX"] != null && STurban["tY"] != null && turban != null) {
         turban.x = lerp(turban.x, STurban["tX"], 0.5);
         turban.y = lerp(turban.y, STurban["tY"], 0.5);
-    } else if (LocalPlayer["teamNumber"] == 2 && turban != null) {
+    }
+
+    if (LocalPlayer["teamNumber"] == 2 && turban != null) {
         const msg = {
             tX: turban.x,
             tY: turban.y
@@ -185,113 +185,66 @@ function SyncTurban(x, y) {
 }
 
 function SyncAppelsiner(msg, isReceived) {
-    for (var i = 0; i < appelsiner.length; i++) {
-        appelsiner[i].playerTeam = LocalPlayer["teamNumber"];
+    if (LocalPlayer["teamNumber"] == 1 && isReceived == true) {
+        ray = msg["xyAppelsin"];
+
+        for (var i = 0; i < ray.length; i++) {
+            appelsin = appelsiner[i];
+            var newPositions = ray[i];
+            appelsin.x = lerp(appelsin.x, newPositions["x"], 0.5);
+            appelsin.y = lerp(appelsin.y, newPositions["y"], 0.5);
+        }
     }
 
-    if (appelsiner.length >= 0) {
-        if (LocalPlayer["teamNumber"] == 1) {
-            for (var i = 0; i < appelsiner.length; i++) {
-                var appelsin = appelsiner[i]
+    if (LocalPlayer["teamNumber"] == 2) {
+        ray.length = 0;
 
+        for (var i = 0; i < appelsiner.length; i++) {
+            var appelsin = appelsiner[i]
+            appelsin.move();
+
+            if (appelsin.x != null && appelsin.y != null) {
                 ray.push({
                     x: appelsin.x,
-                    y: appelsin.y,
-                    xSpeed: appelsin.xspeed,
-                    ySpeed: appelsin.yspeed
-                })
-
-                if (i == appelsiner.length - 1) {
-                    const msg = {
-                        xyAppelsin: ray
-                    }
-                    socket.sendMessage(msg);
-                }
+                    y: appelsin.y
+                });
             }
         }
 
-        if (LocalPlayer["teamNumber"] == 2 && isReceived) {
-            if (msg["xyAppelsin"] != null) {
-                ray = msg["xyAppelsin"];
-                for (var i = 0; i < appelsiner.length; i++) {
-                    var appelsin = appelsiner[i]
-                    var newPositions = ray[i];
-                    if (newPositions != null) {
-                        if (newPositions["aX"] != null && newPositions["aY"] != null) {
-                            appelsin.x = newPositions["aX"];
-                            appelsin.y = newPositions["aY"];
-                            appelsin.xspeed = newPositions["xSpeed"];
-                            appelsin.yspeed = newPositions["ySpeed"];
-                        }
-                    }
-                }
-            }
+        const msg = {
+            xyAppelsin: ray
         }
+        socket.sendMessage(msg);
     }
-    ray.length = 0;
 }
 
-function SpawnNewFruit() {
-    /*if (LocalPlayer["activeFruits"] > OtherPlayer["activeFruits"]) {
-        OtherPlayer["activeFruits"] = LocalPlayer["activeFruits"];
+function SpawnNewFruit(msg) {
+    if (LocalPlayer["teamNumber"] == 1) {
+        appelsiner.push(new Appelsin(LocalPlayer["teamNumber"], mouseY));
+
+        OtherPlayer["activeFruits"] += 1;
+
         const msg = {
-            oFruits: OtherPlayer["activeFruits"]
+            oFruitSpawn: 1
         }
         socket.sendMessage(msg);
     }
 
-    if (appelsiner.length < LocalPlayer["activeFruits"] && LocalPlayer["IsAlive"] && OtherPlayer["IsAlive"]) {
-        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-
-        const msg = {
-            oFruits: appelsiner.length
+    if (LocalPlayer["teamNumber"] == 2) {
+        for (var i = 0; i < msg; i++) {
+            appelsiner.push(new Appelsin(LocalPlayer["teamNumber"]));
+            LocalPlayer["activeFruits"] += 1;
         }
-        socket.sendMessage(msg);
     }
-
-    if (appelsiner.length > OtherPlayer["activeFruits"]) {
-        const msg = {
-            oFruits: appelsiner.length
-        }
-        socket.sendMessage(msg);
-    }
-    */
 }
 
 //Setting up a function that is called when the player has lost all their lifes.
-function Death() {
-    /*
-    //Stops the constant adding of fruits.
-    clearInterval(timerID);
-    //Removes the current fruits.
-    appelsiner.length = 0;
-    //The player is now dead.
-    dead = true;
-    //Setting the game status to "Red".
-    document.getElementById("status").innerHTML = "Red";
-    //Setting the displayed status text to read "Game is Paused".
-    document.getElementById("StatusText").innerHTML = "Game is Paused"
-    //Displaying a "Game Over" text to show the player, that they have died.
-    document.getElementById("GameOverText").innerHTML = "Game Over";
-    //Displaying a button so that the player may restart the game.
-    document.getElementById("Restart").innerHTML = "Click to Restart";
-    */
-    if (OtherPlayer["teamNumber"] == 2 && OtherPlayer["missed"] == 0) {
-        clearInterval(timerID);
-        //Removes the current fruits.
-        appelsiner.length = 0;
-        //Setting the game status to "Red".
-        document.getElementById("status").innerHTML = "Red";
-        //Setting the displayed status text to read "Game is Paused".
-        document.getElementById("StatusText").innerHTML = "Game is Paused"
-        //Displaying a "Game Over" text to show the player, that they have died.
-        document.getElementById("GameOverText").innerHTML = "You Won!";
-        //Displaying a button so that the player may restart the game.
-        document.getElementById("Restart").innerHTML = "Click to Restart";
-    }
+function DeathScreen() {
+    background(255);
+    LocalPlayer["IsReady"] = false;
+    OtherPlayer["IsReady"] = false;
 
-    if (LocalPlayer["teamNumber"] == 2 && LocalPlayer["missed"] == 0) {
-        clearInterval(timerID);
+    if (LocalPlayer["teamNumber"] == 1 && LocalPlayer["missed"] == 0) {
         //Removes the current fruits.
         appelsiner.length = 0;
         //Setting the game status to "Red".
@@ -303,17 +256,38 @@ function Death() {
         //Displaying a button so that the player may restart the game.
         document.getElementById("Restart").innerHTML = "Click to Restart";
 
-        const msg = {
-            oMissed: 3
-        };
-        socket.sendMessage(msg);
+        HighScoreCounter();
+    }
+
+    if (LocalPlayer["teamNumber"] == 2 && LocalPlayer["missed"] == 0) {
+        //Removes the current fruits.
+        appelsiner.length = 0;
+        //Setting the game status to "Red".
+        document.getElementById("status").innerHTML = "Red";
+        //Setting the displayed status text to read "Game is Paused".
+        document.getElementById("StatusText").innerHTML = "Game is Paused"
+        //Displaying a "Game Over" text to show the player, that they have died.
+        document.getElementById("GameOverText").innerHTML = "Game Over!";
+        //Displaying a button so that the player may restart the game.
+        document.getElementById("Restart").innerHTML = "Click to Restart";
 
         HighScoreCounter();
-
-        cursor();
-
-
     }
+}
+
+function ReadyButtom() {
+    IsGameRunning = false;
+
+    document.getElementById("GameOverText").innerHTML = "";
+    document.getElementById("Restart").innerHTML = "";
+    document.getElementById("highscore").innerHTML = "";
+    document.getElementById("besthighscore").innerHTML = "";
+    LocalPlayer["IsReady"] = true;
+
+    const msg = {
+        oReady: true
+    }
+    socket.sendMessage(msg);
 }
 
 //Setting up a function to handle the restart of the game after the player has pressed the "Restart" button.
@@ -323,18 +297,9 @@ function RestartGame() {
     document.getElementById("Restart").innerHTML = "";
 
     //The player is no longer dead and has been giving the same amount of life as when first started.
+    LocalPlayer["missed"] = life;
+    OtherPlayer["missed"] = life;
     missed = life;
-
-    //Starting a new interval to increasse the dificultie over time.
-    if (LocalPlayer["teamNumber"] == 1) {
-        appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-
-        timerID = setInterval(function () {
-            if (IsGameRunning) {
-                appelsiner.push(new Appelsin(670, 100, 70, 50, 10));
-            }
-        }, 6000);
-    }
 
     //Setting the status to green to show the game is running again.
     document.getElementById("status").innerHTML = "Green"
@@ -343,21 +308,34 @@ function RestartGame() {
     document.getElementById("highscore").innerHTML = "";
     document.getElementById("besthighscore").innerHTML = "";
 
+    document.getElementById("Player1").innerHTML = "";
+    document.getElementById("Player2").innerHTML = "";
+
     //Reseting the players score.
+    LocalPlayer["score"] = 0;
+    OtherPlayer["score"] = 0;
     score = 0;
 
+    IsGameRunning = true;
 }
 
 //A function for checking and displaying scores.
 function HighScoreCounter() {
     //If the current highscore is greater then the current best score, then it will be replaced.
-    if (highScore > bestHighScore) {
-        bestHighScore = highScore;
+    if (LocalPlayer["score"] > bestHighScore) {
+        bestHighScore = LocalPlayer["score"];
     }
 
     //Displaying the to scores.
-    document.getElementById("highscore").innerHTML = "Highscore: " + highScore;
-    document.getElementById("besthighscore").innerHTML = "Best Highscore: " + bestHighScore;
+    if (LocalPlayer["teamNumber"] == 1) {
+        document.getElementById("highscore").innerHTML = "Highscore: " + LocalPlayer["score"];
+        document.getElementById("besthighscore").innerHTML = "Best Highscore: " + bestHighScore;
+    }
+
+    if (LocalPlayer["teamNumber"] == 2) {
+        document.getElementById("highscore").innerHTML = "Opponents Highscore: " + LocalPlayer["score"];
+        document.getElementById("besthighscore").innerHTML = "Opponents Best Highscore: " + bestHighScore;
+    }
 }
 
 function keyPressed() {
@@ -365,7 +343,9 @@ function keyPressed() {
 }
 
 function mousePressed() {
-
+    if (LocalPlayer["teamNumber"] == 1 && IsGameRunning) {
+        SpawnNewFruit();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -403,22 +383,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 appelsiner.push(new Appelsin(msg["x"], msg["y"], 70, 50, 10));
             }
 
-            if (msg["oTeam"] != null && msg["oReady"] != null && msg["oServer"] != null) {
+            if (msg["oTeam"] != null && msg["oReady"] != null) {
                 OtherPlayer["teamNumber"] = msg["oTeam"];
                 OtherPlayer["IsReady"] = msg["oReady"];
-                OtherPlayer["IsOnServer"] = msg["oServer"];
 
-                msg["oTeam"] = LocalPlayer["teamNumber"];
-                msg["oReady"] = LocalPlayer["IsReady"];
-                msg["oServer"] = LocalPlayer["IsOnServer"];
-                socket.sendMessage(msg);
+                msg["oReady"] = null;
+
+                const Reply = {
+                    oTeamR: LocalPlayer["teamNumber"],
+                    oReadyR: LocalPlayer["IsReady"]
+                }
+                socket.sendMessage(Reply);
+            }
+
+            if (msg["oTeamR"] != null && msg["oReadyR"] != null) {
+                OtherPlayer["teamNumber"] = msg["oTeamR"];
+                OtherPlayer["IsReady"] = msg["oReadyR"];
+
+                msg["oReadyR"] = null;
             }
 
             if (msg["oMissed"] != null) {
-                OtherPlayer["missed"] = msg["oMissed"];
+                CheckForDamage(msg, true);
             }
 
-            if (msg["xyAppelsin"] != null) {
+            if (msg["xyAppelsin"] != null && msg["xyAppelsin"].length > 0) {
                 SyncAppelsiner(msg, true);
             }
 
@@ -427,11 +416,25 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (msg["oScore"] != null) {
-                OtherPlayer["score"] = msg["oScore"];
+                CheckForScore(msg, true)
             }
 
-            if (msg["oFruits"] != null) {
-                LocalPlayer["activeFruits"] = msg["oFruits"];
+            if (msg["oFruitSpawn"] != null) {
+                SpawnNewFruit(msg["oFruitSpawn"], LocalPlayer["teamNumber"])
+                msg["oFruitSpawn"] = null;
+            }
+
+            if (msg["oReady"] != null) {
+                OtherPlayer["IsReady"] = msg["oReady"];
+
+                const Reply = {
+                    rReady: LocalPlayer["IsReady"]
+                }
+                socket.sendMessage(Reply);
+            }
+
+            if (msg["rReady"] != null) {
+                OtherPlayer["IsReady"] = msg["rReady"];
             }
         });
     }
@@ -443,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function () {
         socket = ElineSocket.create();
         useSocket(socket);
 
-        document.getElementById("IP").innerHTML = socket.id;
+        document.getElementById("IP").innerHTML = "Game IP: " + socket.id;
 
         LocalPlayer["teamNumber"] = 1;
         LocalPlayer["IsReady"] = true;
@@ -467,7 +470,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const msg = {
             oTeam: LocalPlayer["teamNumber"],
             oReady: LocalPlayer["IsReady"],
-            oServer: LocalPlayer["IsOnServer"]
         }
         socket.sendMessage(msg);
     });
