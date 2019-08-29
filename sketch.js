@@ -67,8 +67,8 @@ function draw() {
 
     if (IsGameRunning) {
         //Alle funktionerne som skal gøre mens spillet er i gang, som vil sige når "IsGameRunning" er sand.
-        CheckForDamage();
-        CheckForScore();
+        SyncDamage();
+        SyncScore();
         SyncAppelsiner(null, false);
         SyncTurban();
 
@@ -167,7 +167,7 @@ function WaitingScreen() {
 }
 
 //Funktionen som opdatere og evt. sender hvor meget skade der er.
-function CheckForDamage(msg, isReceived) {
+function SyncDamage(msg, isReceived) {
     //Hvis spilleren er på hold 1 og hvis man har modtaget ny information.
     if (LocalPlayer["teamNumber"] == 1 && isReceived) {
         //Opdatere den lokale antal af mistede appelsiner.
@@ -188,7 +188,7 @@ function CheckForDamage(msg, isReceived) {
 }
 
 //Funktionen som opdatere og evt. sender hvad scoren er.
-function CheckForScore(msg, isReceived) {
+function SyncScore(msg, isReceived) {
     //Hvis den lokale spillers hold er 1 og der er kommet en ny besked.
     if (LocalPlayer["teamNumber"] == 1 && isReceived) {
         //Opdatere den lokale spillers score.
@@ -484,8 +484,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             //Når spilleren modtager ny besked angående hvor mange appelsiner der er mistet.
             if (msg["oMissed"] != null) {
-                //Så køre "CheckForDamage" med de sende værdier.
-                CheckForDamage(msg, true);
+                //Så køre "SyncDamage" med de sende værdier.
+                SyncDamage(msg, true);
             }
 
             //Når spilleren modtager ny besked om at lave en ny appelsin.
@@ -510,8 +510,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             //Når spilleren modtager en ny score.
             if (msg["oScore"] != null) {
-                //Så køre "CheckForScore" med de givet værdier.
-                CheckForScore(msg, true)
+                //Så køre "SyncScore" med de givet værdier.
+                SyncScore(msg, true)
             }
 
             //Når spilleren modtager besked om den modsatte spiller er klar til at genstarte spillet.
