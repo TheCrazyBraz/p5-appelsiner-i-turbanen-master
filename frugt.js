@@ -29,6 +29,7 @@ function Appelsin(startY) {
         if (tid > 0) {
             tid -= 1;
         }
+        //Dette roterer appelsinen hvis appelsinen skal visess
         if (tid < 100) {
             fill(col);
             translate(this.x + rad / 2, this.y + rad / 2);
@@ -58,6 +59,8 @@ function Appelsin(startY) {
         //Her skal vi sørge for at en ny appelsin skydes afsted 
         this.x = rad;
         this.y = random(0, 550);
+
+        //Denne linje sørger for at bolden ikke kommer over x = 0
         yspeed = random(0, this.y / 600 * 10) * -1;
         xspeed = random(2, 6);
         tid = (int)(Math.random() * 400);

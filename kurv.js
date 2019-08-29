@@ -16,20 +16,21 @@ function Kurv(X, Y, w, h, speed) {
     this.h = h;
     this.speed = speed;
     this.col = [250,230,150];
-
+    //Dette loader billedet til turbanen
     img = loadImage('turban.png');
-    this.tegn = function() {
+    //Denne tegner turbanen
+        this.tegn = function() {
         fill(this.col);
         image(img, this.x, this.y, this.w, this.h);
     }
-    //Denne tegner kurven
-
+    
+    //Disse funktioner hjælper turbanen med at bevæge sig
     this.move = function(tast) {
         this.x = mouseX;
         this.y = mouseY;
     }
-    //Disse funktioner hjælper kurven med at bevæge sig
     
+    //Denne funktion hjælper Turbanen med at fange appelsinen
     this.grebet = function(xa, ya, ra) {
         if ((ya < this.y+30 && ya > this.y-3) && xa > this.x+ra && xa < this.x+this.w-ra) {
             return true;
@@ -38,5 +39,5 @@ function Kurv(X, Y, w, h, speed) {
             return false;
         }
     }
-    //Denne funktion hjælper kurven med at fange appelsinen
+    
 } 
