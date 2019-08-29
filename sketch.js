@@ -508,53 +508,70 @@ document.addEventListener('DOMContentLoaded', function () {
                 SyncTurban(msg["tX"], msg["tY"]);
             }
 
+            //Når spilleren modtager en ny score.
             if (msg["oScore"] != null) {
+                //Så køre "CheckForScore" med de givet værdier.
                 CheckForScore(msg, true)
             }
 
+            //Når spilleren modtager besked om den modsatte spiller er klar til at genstarte spillet.
             if (msg["oReady"] != null) {
+                //Så opdatere den at den modsatte spiller er klar.
                 OtherPlayer["IsReady"] = msg["oReady"];
 
+                //Sender en besked tilbage om den lokale spiller er klar.
                 const Reply = {
                     rReady: LocalPlayer["IsReady"]
                 }
                 socket.sendMessage(Reply);
             }
 
+            //Når den anden spiller sender en klar besked tilbage.
             if (msg["rReady"] != null) {
+                //Så bliver spilleren sat til klar.
                 OtherPlayer["IsReady"] = msg["rReady"];
             }
         });
     }
 
+    //Bliver kaldt når "Create" knappen bliver trykket på.
     createBtn.addEventListener('click', () => {
+        //Fjerner noget af teksten.
         landingPage.hidden = true;
         socketsPage.hidden = true;
         header.innerText = 'Creator';
+
+        //Opretter serveren ved hjælp af "Socket"
         socket = ElineSocket.create();
         useSocket(socket);
 
+        //Sætter op så man kan se IP'en og derved joine den først spiller.
         document.getElementById("IP").innerHTML = "Game IP: " + socket.id;
 
+        //Sætter nogle af de lokale værdier, som skal bruges til at oprette spillet.
         LocalPlayer["teamNumber"] = 1;
         LocalPlayer["IsReady"] = true;
         LocalPlayer["IsOnServer"] = true;
     });
 
-    // Når der trykkes på connect, skal man indtaste en pin kode (prompt)
-    // og denne bruges til at lave en socket med ElineSocket.connect(pin).
+    //Når der trykkes på connect, skal man indtaste en pin kode (prompt) og denne bruges til at lave en socket med ElineSocket.connect(pin).
     connectBtn.addEventListener('click', () => {
+        //Gemmer teksten.
         landingPage.hidden = true;
         socketsPage.hidden = true;
         header.innerText = 'Connector';
         const pin = prompt("Pin: ");
+
+        //Forbinder til den anden spiller.
         socket = ElineSocket.connect(pin);
         useSocket(socket);
-
+        
+        //Sætter nogle af de lokale værdier, som skal bruges til at oprette spillet.
         LocalPlayer["teamNumber"] = 2;
         LocalPlayer["IsReady"] = true;
         LocalPlayer["IsOnServer"] = true;
 
+        //Sender værdier til den anden spiller.
         const msg = {
             oTeam: LocalPlayer["teamNumber"],
             oReady: LocalPlayer["IsReady"],
