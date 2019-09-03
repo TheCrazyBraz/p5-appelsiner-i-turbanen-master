@@ -7,7 +7,7 @@ var rad = 20;
 var turban;
 
 var score = 0;
-var missed = 3;
+var missed = 10;
 
 //Dette er en overordnet funktion  der styrer selve appelsin objektet
 function Appelsin(startY) {

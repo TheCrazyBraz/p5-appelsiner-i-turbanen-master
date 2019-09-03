@@ -289,7 +289,14 @@ function SpawnNewFruit(newFruits, yPos) {
     //Hvis den lokale spillers hold er 1.
     if (LocalPlayer["teamNumber"] == 1) {
         //Laver en ny appelsin med en y værdi som svare til musens y værdi.
-        appelsiner.push(new Appelsin(mouseY));
+
+        var yPosLimeted = mouseY
+
+        if (yPosLimeted > height) {
+            yPosLimeted = height;
+        }
+
+        appelsiner.push(new Appelsin(yPosLimeted));
 
         //Siger til den anden spiller at de også skal lave en ny appelsin.
         const msg = {
@@ -301,9 +308,15 @@ function SpawnNewFruit(newFruits, yPos) {
 
     //Hvis den lokale spillers hold er 2.
     if (LocalPlayer["teamNumber"] == 2) {
+        var yPosLimeted = yPos
+
+        if (yPosLimeted > height) {
+            yPosLimeted = height;
+        }
+
         //Laver nye appelsiner baseret på hvor mange den anden spiller har lavet.
         for (var i = 0; i < newFruits; i++) {
-            appelsiner.push(new Appelsin(yPos));
+            appelsiner.push(new Appelsin(yPosLimeted));
         }
     }
 }
@@ -565,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
         //Forbinder til den anden spiller.
         socket = ElineSocket.connect(pin);
         useSocket(socket);
-        
+
         //Sætter nogle af de lokale værdier, som skal bruges til at oprette spillet.
         LocalPlayer["teamNumber"] = 2;
         LocalPlayer["IsReady"] = true;
